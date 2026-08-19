@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CTI Dashboard</title>
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-left">
+    <h1>Cyber Threat Intel Dashboard</h1>
+    <span class="subtitle">Vulnerabilities &middot; Breaches &middot; Campaigns &middot; IOCs</span>
+  </div>
+  <div class="topbar-right">
+    <div id="source-status" class="source-status" aria-live="polite"></div>
+    <button id="theme-toggle" class="icon-btn" type="button" aria-label="Toggle theme" title="Toggle light/dark theme">
+      <svg id="theme-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>
+    </button>
+  </div>
+</header>
+
+<main>
+  <!-- Stat tiles -->
+  <section class="stat-grid" id="stat-grid" aria-label="Summary statistics"></section>
+
+  <!-- Charts -->
+  <section class="chart-grid">
+    <figure class="chart-card">
+      <figcaption>
+        <h2>Vulnerabilities by severity</h2>
+        <button class="table-toggle" data-target="severity-table" type="button">Table view</button>
+      </figcaption>
+      <div id="severity-chart" class="chart-body"></div>
+      <table id="severity-table" class="table-view hidden"><thead><tr><th>Severity</th><th>Count</th></tr></thead><tbody></tbody></table>
+    </figure>
+
+    <figure class="chart-card">
+      <figcaption>
+        <h2>IOC types (last fetch)</h2>
+        <button class="table-toggle" data-target="ioc-table-chart" type="button">Table view</button>
+      </figcaption>
+      <div id="ioc-type-chart" class="chart-body"></div>
+      <table id="ioc-table-chart" class="table-view hidden"><thead><tr><th>Type</th><th>Count</th></tr></thead><tbody></tbody></table>
+    </figure>
+
+    <figure class="chart-card">
+      <figcaption>
+        <h2>New vulnerabilities &mdash; last 14 days</h2>
+        <button class="table-toggle" data-target="trend-table" type="button">Table view</button>
+      </figcaption>
+      <div id="trend-chart" class="chart-body"></div>
+      <table id="trend-table" class="table-view hidden"><thead><tr><th>Date</th><th>New CVEs</th></tr></thead><tbody></tbody></table>
+    </figure>
+  </section>
+
+  <!-- Tabs -->
+  <nav class="tabs" role="tablist" aria-label="Data views">
+    <button class="tab active" role="tab" aria-selected="true" data-tab="vulns" type="button">Vulnerabilities</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="news" type="button">Breaches &amp; Campaigns</button>
+    <button class="tab" role="tab" aria-selected="false" data-tab="iocs" type="button">IOCs</button>
+  </nav>
+
+  <!-- Vulnerabilities panel -->
+  <section id="panel-vulns" class="panel" role="tabpanel">
+    <div class="filter-row">
+      <input type="search" id="vuln-search" placeholder="Search CVE ID or description&hellip;">
+      <select id="vuln-severity">
+        <option value="">All severities</option>
+        <option value="CRITICAL">Critical</option>
+        <option value="HIGH">High</option>
+        <option value="MEDIUM">Medium</option>
+        <option value="LOW">Low</option>
+      </select>
+      <label class="checkbox-label"><input type="checkbox" id="vuln-kev-only"> CISA KEV only</label>
+    </div>
+    <div class="table-wrap">
+      <table id="vuln-table">
+        <thead><tr>
+          <th>CVE</th><th>Severity</th><th>CVSS</th><th>KEV</th><th>Published</th><th>Vendor / Product</th><th>Description</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="empty-state hidden" id="vuln-empty">No vulnerabilities match these filters yet. Data refreshes automatically every few hours.</div>
+  </section>
+
+  <!-- News panel -->
+  <section id="panel-news" class="panel hidden" role="tabpanel">
+    <div class="filter-row">
+      <input type="search" id="news-search" placeholder="Search headlines&hellip;">
+      <select id="news-category">
+        <option value="">All categories</option>
+        <option value="breach">Data breaches</option>
+        <option value="campaign">Attack campaigns</option>
+        <option value="vulnerability">Vulnerability news</option>
+        <option value="malware">Malware</option>
+        <option value="general">General</option>
+      </select>
+    </div>
+    <div id="news-list" class="news-list"></div>
+    <div class="empty-state hidden" id="news-empty">No news items match these filters yet.</div>
+  </section>
+
+  <!-- IOCs panel -->
+  <section id="panel-iocs" class="panel hidden" role="tabpanel">
+    <div class="filter-row">
+      <input type="search" id="ioc-search" placeholder="Search IOC value&hellip;">
+      <select id="ioc-type">
+        <option value="">All types</option>
+      </select>
+    </div>
+    <div class="table-wrap">
+      <table id="ioc-table">
+        <thead><tr>
+          <th>Type</th><th>Value</th><th>Malware</th><th>Threat type</th><th>Confidence</th><th>First seen</th><th>Source</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="empty-state hidden" id="ioc-empty">No IOCs yet &mdash; set ABUSECH_API_KEY in .env to enable ThreatFox/URLhaus ingestion.</div>
+  </section>
+</main>
+
+<footer>
+  <span>Sources: NVD &middot; CISA KEV &middot; The Hacker News &middot; Cyber Security News &middot; BleepingComputer &middot; Krebs on Security &middot; abuse.ch ThreatFox/URLhaus</span>
+</footer>
+
+<div id="tooltip" class="tooltip hidden" role="tooltip"></div>
+
+<script src="/static/js/app.js"></script>
+</body>
+</html>
