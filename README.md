@@ -26,26 +26,53 @@ running instance triggers one synchronously.
 ## Quick start (LXC container)
 
 Requires a Debian/Ubuntu-based container (e.g. Debian 12 or Ubuntu 22.04+ on
-Proxmox) with internet access and root access.
+Proxmox) with internet access and root access. Everything always ends up
+installed at `/opt/ctidash`, regardless of which method you use to get there.
+
+**Option A -- from a git repo (recommended).** Makes `/opt/ctidash` the live
+git checkout, so future updates are just a pull + restart:
 
 ```bash
-# copy/extract this project onto the container, then:
+sudo bash install.sh https://github.com/you/cti-dashboard.git
+# private repo over SSH (set up a deploy key on the container first):
+sudo bash install.sh git@github.com:you/cti-dashboard.git
+```
+
+**Option B -- from a local copy** (no git, e.g. you `scp`'d or `pct push`'d
+the zip over):
+
+```bash
 cd cti-dashboard
 sudo bash install.sh
 ```
 
-The installer will:
-1. Install `python3`, `nginx`, `sqlite3`
+Either way the installer will:
+1. Install `python3`, `git`, `nginx`, `sqlite3`
 2. Create a dedicated `ctidash` system user
-3. Copy the app to `/opt/ctidash` and set up a virtualenv
-4. Create `/opt/ctidash/.env` from the example (edit it to add API keys)
+3. Get the app into `/opt/ctidash` (clone, or copy) and set up a virtualenv
+4. Create `/opt/ctidash/.env` if it doesn't exist yet (edit it to add API keys --
+   this step can't fail even if `.env.example` is missing from the checkout,
+   it falls back to writing working defaults directly)
 5. Install and start a `ctidash` systemd service (uvicorn, bound to `127.0.0.1:8000`)
 6. Configure nginx to reverse-proxy a port of your choice (default `80`) to it
 
 At the end it prints the URL to open, e.g. `http://192.168.1.50`.
 
-Re-running `sudo bash install.sh` after pulling an updated copy of this
-project safely updates the existing install in place.
+It's safe to re-run any time -- it updates the existing install in place
+without touching your `.env` or your data. With Option A, re-running with
+the same URL is equivalent to:
+
+```bash
+cd /opt/ctidash && git pull && sudo systemctl restart ctidash
+```
+
+**Heads up on git repos and dotfiles:** `.env.example` and `.gitignore` are
+dotfiles, which file managers (Finder, Explorer) hide by default. If you
+create the GitHub repo by dragging files into the web upload UI instead of
+using `git push` from a terminal, those files can silently get left out.
+The installer no longer fails if that happens (see step 4 above), but it's
+worth double-checking your repo actually contains them -- `ls -la` locally,
+or look for "Show hidden files" in your file manager before uploading.
 
 ### After installing
 
